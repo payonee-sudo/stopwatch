@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#090705" />
+  <meta name="description" content="핸드드립 추출에 어울리는 랩 기록 정밀 스탑워치" />
+  <title>핸드드립 스탑워치</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23090705'/%3E%3Cpath d='M32 10C25 21 18 29 18 39a14 14 0 0 0 28 0c0-10-7-18-14-29Z' fill='%23f29d55'/%3E%3Cpath d='M25 40c1 5 4 7 8 8' fill='none' stroke='%23fff1df' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #090705;
+      --panel: #16110d;
+      --panel-soft: #211913;
+      --line: rgba(255, 255, 255, .1);
+      --text: #f4f6f0;
+      --muted: #8e999b;
+      --accent: #f29d55;
+      --accent-dark: #271207;
+      --danger: #ff7a68;
+      --radius: 30px;
+      font-family: Inter, Pretendard, "Noto Sans KR", system-ui, -apple-system, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background:
+        radial-gradient(circle at 50% 20%, rgba(242, 157, 85, .13), transparent 34rem),
+        var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    button { font: inherit; }
+
+    .shell {
+      width: min(100% - 32px, 920px);
+      margin: 0 auto;
+      padding: 32px 0 64px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 30px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      font-size: .9rem;
+      font-weight: 800;
+      letter-spacing: .12em;
+    }
+
+    .brand-mark {
+      width: 15px;
+      aspect-ratio: 1;
+      border: 3px solid var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 18px rgba(242, 157, 85, .4);
+    }
+
+    .shortcut-hint {
+      color: var(--muted);
+      font-size: .78rem;
+    }
+
+    kbd {
+      display: inline-grid;
+      place-items: center;
+      min-width: 26px;
+      min-height: 24px;
+      margin-left: 6px;
+      padding: 0 7px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel);
+      color: #c4cbcc;
+      font: 600 .72rem/1 system-ui, sans-serif;
+      box-shadow: inset 0 -2px 0 rgba(255, 255, 255, .04);
+    }
+
+    .timer-card {
+      position: relative;
+      min-height: 720px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        radial-gradient(circle at 50% 47%, rgba(172, 85, 29, .15), transparent 24rem),
+        linear-gradient(145deg, rgba(29, 21, 16, .96), rgba(10, 8, 6, .99));
+      box-shadow: 0 32px 90px rgba(0, 0, 0, .35);
+    }
+
+    .timer-card::before {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border: 1px solid rgba(255, 255, 255, .045);
+      border-radius: 22px;
+      pointer-events: none;
+    }
+
+    .timer-wrap {
+      position: relative;
+      width: min(80vw, 430px);
+      height: 640px;
+      display: grid;
+      place-items: center;
+    }
+
+    .brew-visual {
+      position: absolute;
+      inset: -8px 0 auto;
+      width: 100%;
+      height: auto;
+      user-select: none;
+      pointer-events: none;
+      filter: drop-shadow(0 28px 38px rgba(0, 0, 0, .46));
+    }
+
+    .coffee-aura {
+      position: absolute;
+      left: 19%;
+      right: 19%;
+      bottom: 8%;
+      height: 31%;
+      border-radius: 50%;
+      background: rgba(225, 108, 34, .1);
+      filter: blur(28px);
+      transition: opacity .3s ease;
+      pointer-events: none;
+    }
+
+    body.running .coffee-aura { opacity: 1; animation: warmGlow 2.6s ease-in-out infinite; }
+
+    .drip-zone {
+      position: absolute;
+      z-index: 2;
+      top: 48.5%;
+      left: 50%;
+      width: 34px;
+      height: 104px;
+      overflow: hidden;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    .coffee-drop {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      width: 7px;
+      height: 12px;
+      margin-left: -3.5px;
+      opacity: 0;
+      border-radius: 55% 55% 62% 62%;
+      background: linear-gradient(180deg, #ffd09a 0%, #c15b1e 32%, #5a2109 100%);
+      box-shadow: 0 0 8px rgba(242, 157, 85, .65);
+      transform: translateY(0) scale(.65);
+    }
+
+    body.running .coffee-drop { animation: coffeeFall 1.2s cubic-bezier(.38, .05, .76, .58) infinite; }
+    body.running .coffee-drop:nth-child(2) { animation-delay: .4s; }
+    body.running .coffee-drop:nth-child(3) { animation-delay: .8s; }
+
+    .carafe-fill {
+      position: absolute;
+      z-index: 1;
+      left: 17%;
+      bottom: 7.5%;
+      width: 66%;
+      height: var(--brew-level, 0%);
+      max-height: 23%;
+      border-radius: 48% 48% 38% 38% / 14% 14% 42% 42%;
+      background: linear-gradient(180deg, rgba(255, 188, 114, .35), rgba(125, 42, 8, .64));
+      box-shadow: inset 0 3px 0 rgba(255, 214, 168, .35), 0 0 28px rgba(206, 86, 22, .32);
+      transition: height .12s linear;
+      pointer-events: none;
+    }
+
+    .readout {
+      position: absolute;
+      z-index: 1;
+      top: 68%;
+      left: 50%;
+      width: 68%;
+      transform: translate(-50%, -50%);
+      padding: 18px 20px 16px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+      border: 1px solid rgba(255, 218, 183, .16);
+      border-radius: 22px;
+      background: rgba(8, 5, 3, .58);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255, 255, 255, .05);
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      color: var(--muted);
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .status::before {
+      content: "";
+      width: 7px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: #536064;
+    }
+
+    body.running .status { color: var(--accent); }
+    body.running .status::before {
+      background: var(--accent);
+      box-shadow: 0 0 12px rgba(242, 157, 85, .8);
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+
+    .time-main {
+      font-size: clamp(2.8rem, 8vw, 4.45rem);
+      font-weight: 700;
+      line-height: .9;
+      letter-spacing: -.075em;
+    }
+
+    .time-ms {
+      margin-top: 10px;
+      color: var(--accent);
+      font-size: clamp(1.2rem, 3.5vw, 1.65rem);
+      font-weight: 700;
+      letter-spacing: .08em;
+    }
+
+    .brew-progress {
+      width: 100%;
+      height: 4px;
+      margin-top: 15px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .11);
+    }
+
+    .brew-progress-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #813914, var(--accent), #ffd09a);
+      box-shadow: 0 0 12px rgba(242, 157, 85, .45);
+    }
+
+    .controls {
+      position: absolute;
+      z-index: 2;
+      bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .control-btn {
+      min-width: 100px;
+      height: 52px;
+      padding: 0 22px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,.035);
+      color: var(--text);
+      font-weight: 750;
+      cursor: pointer;
+      transition: transform .16s ease, background .16s ease, border-color .16s ease, color .16s ease;
+    }
+
+    .control-btn:hover:not(:disabled) { transform: translateY(-2px); border-color: rgba(255,255,255,.22); }
+    .control-btn:active:not(:disabled) { transform: translateY(0) scale(.98); }
+    .control-btn:focus-visible { outline: 3px solid rgba(234,255,87,.35); outline-offset: 3px; }
+    .control-btn:disabled { opacity: .32; cursor: not-allowed; }
+
+    .control-btn.primary {
+      min-width: 132px;
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--accent-dark);
+      box-shadow: 0 10px 32px rgba(242,157,85,.16);
+    }
+
+    .laps {
+      margin-top: 20px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: rgba(17, 22, 25, .72);
+    }
+
+    .laps-header,
+    .lap-row {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr 1.2fr;
+      align-items: center;
+      gap: 16px;
+      padding: 0 26px;
+    }
+
+    .laps-header {
+      min-height: 58px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .laps-header span:not(:first-child),
+    .lap-row span:not(:first-child) { text-align: right; }
+
+    .lap-list { list-style: none; margin: 0; padding: 0; }
+
+    .lap-row {
+      min-height: 62px;
+      border-bottom: 1px solid rgba(255,255,255,.055);
+      font-variant-numeric: tabular-nums;
+      animation: reveal .28s ease both;
+    }
+
+    .lap-row:last-child { border-bottom: 0; }
+    .lap-number { color: var(--muted); font-weight: 700; }
+    .lap-split { color: #c3cacb; }
+    .lap-total { font-weight: 700; }
+
+    .lap-row.fastest .lap-split { color: var(--accent); }
+    .lap-row.slowest .lap-split { color: var(--danger); }
+
+    .empty-laps {
+      display: grid;
+      place-items: center;
+      min-height: 92px;
+      padding: 20px;
+      color: var(--muted);
+      font-size: .9rem;
+      text-align: center;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @keyframes pulse { 50% { opacity: .35; } }
+    @keyframes reveal { from { opacity: 0; transform: translateY(-7px); } }
+    @keyframes warmGlow { 50% { opacity: .45; transform: scale(1.05); } }
+    @keyframes coffeeFall {
+      0% { opacity: 0; transform: translateY(0) scale(.6); }
+      14% { opacity: 1; }
+      78% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(96px) scale(1); }
+    }
+
+    @media (max-width: 640px) {
+      .shell { width: min(100% - 20px, 920px); padding-top: 20px; }
+      .shortcut-hint { display: none; }
+      .timer-card { min-height: 630px; border-radius: 24px; }
+      .timer-wrap { width: min(94vw, 360px); height: 540px; transform: translateY(-22px); }
+      .readout { width: 72%; top: 67%; padding-inline: 14px; }
+      .controls { bottom: 22px; gap: 8px; }
+      .control-btn { min-width: 0; height: 50px; padding: 0 19px; }
+      .control-btn.primary { min-width: 116px; }
+      .laps-header, .lap-row { padding-inline: 18px; gap: 10px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="brand"><span class="brand-mark" aria-hidden="true"></span>BREW TIMER</div>
+      <div class="shortcut-hint">시작 / 정지 <kbd>Space</kbd> &nbsp; 랩 <kbd>L</kbd></div>
+    </header>
+
+    <section class="timer-card" aria-labelledby="timer-heading">
+      <h1 id="timer-heading" class="sr-only">스탑워치</h1>
+      <div class="timer-wrap">
+        <div class="coffee-aura" aria-hidden="true"></div>
+        <img class="brew-visual" src="coffee-brewer-nodrip.png" alt="드리퍼와 유리 서버로 구성된 핸드드립 추출 도구" />
+        <div id="carafeFill" class="carafe-fill" aria-hidden="true"></div>
+        <div class="drip-zone" aria-hidden="true">
+          <span class="coffee-drop"></span>
+          <span class="coffee-drop"></span>
+          <span class="coffee-drop"></span>
+        </div>
+        <div class="readout" role="timer" aria-live="off" aria-atomic="true">
+          <div id="status" class="status">준비</div>
+          <div id="timeMain" class="time-main">00:00</div>
+          <div id="timeMs" class="time-ms">00.00</div>
+          <div class="brew-progress" aria-hidden="true"><div id="brewFill" class="brew-progress-fill"></div></div>
+        </div>
+      </div>
+
+      <div class="controls" aria-label="스탑워치 조작">
+        <button id="resetBtn" class="control-btn" type="button" disabled>초기화</button>
+        <button id="toggleBtn" class="control-btn primary" type="button">시작</button>
+        <button id="lapBtn" class="control-btn" type="button" disabled>랩</button>
+      </div>
+    </section>
+
+    <section class="laps" aria-labelledby="laps-title">
+      <div class="laps-header">
+        <span id="laps-title">랩</span>
+        <span>구간</span>
+        <span>전체</span>
+      </div>
+      <ol id="lapList" class="lap-list"></ol>
+      <div id="emptyLaps" class="empty-laps">랩을 기록하면 구간별 시간이 여기에 표시됩니다.</div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const timeMain = document.querySelector('#timeMain');
+      const timeMs = document.querySelector('#timeMs');
+      const status = document.querySelector('#status');
+      const brewFill = document.querySelector('#brewFill');
+      const timerWrap = document.querySelector('.timer-wrap');
+      const toggleBtn = document.querySelector('#toggleBtn');
+      const lapBtn = document.querySelector('#lapBtn');
+      const resetBtn = document.querySelector('#resetBtn');
+      const lapList = document.querySelector('#lapList');
+      const emptyLaps = document.querySelector('#emptyLaps');
+
+      let running = false;
+      let startAt = 0;
+      let elapsed = 0;
+      let rafId = null;
+      let laps = [];
+
+      const pad = (value, size = 2) => String(value).padStart(size, '0');
+
+      function currentElapsed() {
+        return running ? elapsed + performance.now() - startAt : elapsed;
+      }
+
+      function format(ms, includeHours = false) {
+        const totalCentiseconds = Math.floor(ms / 10);
+        const cs = totalCentiseconds % 100;
+        const totalSeconds = Math.floor(totalCentiseconds / 100);
+        const seconds = totalSeconds % 60;
+        const totalMinutes = Math.floor(totalSeconds / 60);
+        const minutes = totalMinutes % 60;
+        const hours = Math.floor(totalMinutes / 60);
+        return includeHours || hours > 0
+          ? `${pad(hours)}:${pad(minutes)}:${pad(seconds)}.${pad(cs)}`
+          : `${pad(minutes)}:${pad(seconds)}.${pad(cs)}`;
+      }
+
+      function renderTime(ms) {
+        const totalCentiseconds = Math.floor(ms / 10);
+        const cs = totalCentiseconds % 100;
+        const totalSeconds = Math.floor(totalCentiseconds / 100);
+        const seconds = totalSeconds % 60;
+        const totalMinutes = Math.floor(totalSeconds / 60);
+        const minutes = totalMinutes % 60;
+        const hours = Math.floor(totalMinutes / 60);
+        timeMain.textContent = hours > 0
+          ? `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
+          : `${pad(minutes)}:${pad(seconds)}`;
+        timeMs.textContent = `00.${pad(cs)}`;
+        const extractionProgress = Math.min(ms / 180000, 1);
+        brewFill.style.width = `${extractionProgress * 100}%`;
+        timerWrap.style.setProperty('--brew-level', `${extractionProgress * 23}%`);
+      }
+
+      function tick() {
+        renderTime(currentElapsed());
+        rafId = requestAnimationFrame(tick);
+      }
+
+      function setRunning(next) {
+        const capturedElapsed = currentElapsed();
+        running = next;
+        if (!running) elapsed = capturedElapsed;
+        document.body.classList.toggle('running', running);
+        toggleBtn.textContent = running ? '일시정지' : elapsed > 0 ? '계속' : '시작';
+        lapBtn.disabled = !running;
+        resetBtn.disabled = running || elapsed === 0;
+        status.textContent = running ? '측정 중' : elapsed > 0 ? '일시정지' : '준비';
+
+        if (running) {
+          startAt = performance.now();
+          cancelAnimationFrame(rafId);
+          tick();
+        } else {
+          cancelAnimationFrame(rafId);
+          renderTime(elapsed);
+        }
+      }
+
+      function toggle() { setRunning(!running); }
+
+      function recordLap() {
+        if (!running) return;
+        const total = currentElapsed();
+        const previousTotal = laps.length ? laps[laps.length - 1].total : 0;
+        laps.push({ total, split: total - previousTotal });
+        renderLaps();
+      }
+
+      function renderLaps() {
+        emptyLaps.hidden = laps.length > 0;
+        if (!laps.length) {
+          lapList.innerHTML = '';
+          return;
+        }
+
+        const splitValues = laps.map(lap => lap.split);
+        const fastest = laps.length > 1 ? Math.min(...splitValues) : null;
+        const slowest = laps.length > 1 ? Math.max(...splitValues) : null;
+
+        lapList.innerHTML = [...laps].reverse().map((lap, reversedIndex) => {
+          const lapNumber = laps.length - reversedIndex;
+          const state = lap.split === fastest ? ' fastest' : lap.split === slowest ? ' slowest' : '';
+          return `<li class="lap-row${state}">
+            <span class="lap-number">#${pad(lapNumber)}</span>
+            <span class="lap-split">${format(lap.split)}</span>
+            <span class="lap-total">${format(lap.total, lap.total >= 3600000)}</span>
+          </li>`;
+        }).join('');
+      }
+
+      function reset() {
+        if (running) return;
+        elapsed = 0;
+        laps = [];
+        renderTime(0);
+        renderLaps();
+        setRunning(false);
+      }
+
+      toggleBtn.addEventListener('click', toggle);
+      lapBtn.addEventListener('click', recordLap);
+      resetBtn.addEventListener('click', reset);
+
+      document.addEventListener('keydown', event => {
+        if (event.repeat || ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(document.activeElement.tagName)) return;
+        if (event.code === 'Space') {
+          event.preventDefault();
+          toggle();
+        } else if (event.key.toLowerCase() === 'l') {
+          recordLap();
+        } else if (event.key.toLowerCase() === 'r' && !running) {
+          reset();
+        }
+      });
+
+      const modelContext = document.modelContext;
+      if (modelContext?.registerTool) {
+        const tools = [
+          {
+            name: 'start_stopwatch',
+            title: '스탑워치 시작',
+            description: '스탑워치가 멈춰 있을 때 시간 측정을 시작하거나 이어서 측정합니다.',
+            inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+            annotations: { readOnlyHint: false, untrustedContentHint: false },
+            execute: () => {
+              if (!running) setRunning(true);
+              return { running: true, elapsedMilliseconds: Math.round(currentElapsed()) };
+            }
+          },
+          {
+            name: 'pause_stopwatch',
+            title: '스탑워치 일시정지',
+            description: '현재 스탑워치의 시간 측정을 일시정지합니다.',
+            inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+            annotations: { readOnlyHint: false, untrustedContentHint: false },
+            execute: () => {
+              if (running) setRunning(false);
+              return { running: false, elapsedMilliseconds: Math.round(elapsed) };
+            }
+          },
+          {
+            name: 'record_stopwatch_lap',
+            title: '랩 기록',
+            description: '실행 중인 스탑워치에 현재 구간의 랩 기록을 추가합니다.',
+            inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+            annotations: { readOnlyHint: false, untrustedContentHint: false },
+            execute: () => {
+              if (!running) throw new Error('스탑워치가 실행 중일 때만 랩을 기록할 수 있습니다.');
+              recordLap();
+              const latest = laps[laps.length - 1];
+              return { lapNumber: laps.length, splitMilliseconds: Math.round(latest.split), totalMilliseconds: Math.round(latest.total) };
+            }
+          },
+          {
+            name: 'reset_stopwatch',
+            title: '스탑워치 초기화',
+            description: '멈춰 있는 스탑워치의 시간과 모든 랩 기록을 0으로 초기화합니다.',
+            inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+            annotations: { readOnlyHint: false, untrustedContentHint: false },
+            execute: () => {
+              if (running) throw new Error('초기화하기 전에 스탑워치를 일시정지하세요.');
+              reset();
+              return { running: false, elapsedMilliseconds: 0, lapCount: 0 };
+            }
+          }
+        ];
+        for (const tool of tools) {
+          try { void Promise.resolve(modelContext.registerTool(tool)).catch(() => {}); } catch (_) {}
+        }
+      }
+
+      renderTime(0);
+    })();
+  </script>
+</body>
+</html>
